@@ -35,6 +35,11 @@ class ResourceStore {
     this.records = observable([]);
     this.filtered = observable([]);
     this.relatedRecords = observable([]);
+    this._relatedStores = observable({});
+
+    this.addRelatedStore = action(({ type, store }) => {
+      this._relatedStores[type] = store;
+    });
 
     this.loadAll = action(({ options } = {}) => {
       this._status.set(STATUS_LOADING);
@@ -68,6 +73,23 @@ class ResourceStore {
             this._status.set(STATUS_SUCCESS);
             storeRecord(this.records)(record);
           });
+
+          if (response.included) {
+            response.included.forEach((foreignItem) => {
+              const store = this.relatedStores[foreignItem.type];
+
+              if (store !== undefined) {
+                const foreignResource = new Resource({
+                  record: foreignItem,
+                  client: this.client,
+                  store: store,
+                });
+                runInAction(() => {
+                  store.storeRecords([foreignResource]);
+                });
+              }
+            });
+          }
           return record;
         })
         .catch(handleError(this));
@@ -160,6 +182,10 @@ class ResourceStore {
 
   get error() {
     return this._status.get() === STATUS_ERROR;
+  }
+
+  get relatedStores() {
+    return this._relatedStores;
   }
 
   all() {

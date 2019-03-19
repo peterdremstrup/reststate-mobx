@@ -259,6 +259,60 @@ describe('ResourceStore', () => {
       });
     });
 
+    describe('when the record includes relations', () => {
+      const id = '42';
+      const record = {
+        type: 'widgets',
+        id,
+        attributes: {
+          title: 'New Title',
+        },
+      };
+      let included = [{
+        type: 'buttons',
+        id: '1',
+        attributes: {
+          title: 'New Button'
+        }
+      }];
+      let buttonStore = new ResourceStore('buttons', api);
+
+      let resolvedRecord;
+
+      beforeEach(() => {
+        store.storeRecords([
+          {
+            type: 'widgets',
+            id: '42',
+            attributes: {
+              title: 'Old Title',
+            },
+          },
+        ]);
+
+        store.addRelatedStore({ type: 'buttons', store: buttonStore });
+
+        api.get.mockResolvedValue({
+          data: {
+            data: record,
+          },
+          included: included
+        });
+
+        return store
+          .loadById({ id, options: fieldOptions })
+          .then(record => (resolvedRecord = record));
+      });
+
+      it('should have a related button store', () => {
+        expect(store.relatedStores.buttons).toEqual(buttonStore);
+      });
+
+      it('should add button to button store', () => {
+        expect(buttonStore.all().length).toEqual(included.length);
+      });
+    });
+
     describe('error', () => {
       const error = { dummy: 'error' };
 
