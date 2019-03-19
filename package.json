@@ -14,7 +14,7 @@
     "docs:build": "vuepress build docs"
   },
   "dependencies": {
-    "@reststate/client": "^0.0.5"
+    "@reststate/client": "https://github.com/peterdremstrup/reststate-client"
   },
   "peerDependencies": {
     "mobx": "^5.5.0"
