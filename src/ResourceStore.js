@@ -54,6 +54,8 @@ class ResourceStore {
             this._status.set(STATUS_SUCCESS);
             records.forEach(storeRecord(this.records));
           });
+					this.addIncludedRecords(response);
+
           return records;
         })
         .catch(handleError(this));
@@ -73,23 +75,8 @@ class ResourceStore {
             this._status.set(STATUS_SUCCESS);
             storeRecord(this.records)(record);
           });
+          this.addIncludedRecords(response);
 
-          if (response.included) {
-            response.included.forEach((foreignItem) => {
-              const store = this.relatedStores[foreignItem.type];
-
-              if (store !== undefined) {
-                const foreignResource = new Resource({
-                  record: foreignItem,
-                  client: this.client,
-                  store: store,
-                });
-                runInAction(() => {
-                  store.storeRecords([foreignResource]);
-                });
-              }
-            });
-          }
           return record;
         })
         .catch(handleError(this));
@@ -114,6 +101,8 @@ class ResourceStore {
             this.filtered.replace([...otherFilteredEntries, { filter, ids }]);
             resources.forEach(storeRecord(this.records));
           });
+					this.addIncludedRecords(response);
+
           return resources;
         })
         .catch(handleError(this));
@@ -142,6 +131,8 @@ class ResourceStore {
             ]);
             resources.forEach(storeRecord(this.records));
           });
+					this.addIncludedRecords(response);
+
           return resources;
         })
         .catch(handleError(this));
@@ -174,6 +165,25 @@ class ResourceStore {
         this.records.filter(testRecord => testRecord.id !== record.id),
       );
     });
+
+    this.addIncludedRecords = action(response => {
+			if (response.included !== undefined && response.included.length) {
+				response.included.forEach((foreignItem) => {
+					const store = this.relatedStores[foreignItem.type];
+
+					if (store !== undefined) {
+						const foreignResource = new Resource({
+							record: foreignItem,
+							client: this.client,
+							store: store,
+						});
+						runInAction(() => {
+							store.storeRecords([foreignResource]);
+						});
+					}
+				});
+			}
+    })
   }
 
   get loading() {

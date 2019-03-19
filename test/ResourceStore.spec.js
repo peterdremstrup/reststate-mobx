@@ -11,6 +11,7 @@ describe('ResourceStore', () => {
 
   let store;
   let api;
+  let buttonStore;
 
   beforeEach(() => {
     api = {
@@ -21,6 +22,7 @@ describe('ResourceStore', () => {
       name: 'widgets',
       httpClient: api,
     });
+    buttonStore = new ResourceStore({ name: 'buttons', httpClient: api })
   });
 
   describe('loadAll', () => {
@@ -275,7 +277,6 @@ describe('ResourceStore', () => {
           title: 'New Button'
         }
       }];
-      let buttonStore = new ResourceStore('buttons', api);
 
       let resolvedRecord;
 
