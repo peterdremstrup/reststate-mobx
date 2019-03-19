@@ -168,17 +168,32 @@ class ResourceStore {
 
     this.addIncludedRecords = action(response => {
 			if (response.included !== undefined && response.included.length) {
-				response.included.forEach((foreignItem) => {
-					const store = this.relatedStores[foreignItem.type];
+				const includeMap = {};
+				response.included.forEach((includedRecord) => {
+					const type = includedRecord.type;
+					const store = this.relatedStores[includedRecord.type];
 
 					if (store !== undefined) {
-						const foreignResource = new Resource({
-							record: foreignItem,
+						if (includeMap[type] === undefined) {
+							includeMap[type] = [];
+						}
+
+						const includedResource = new Resource({
+							record: includedRecord,
 							client: this.client,
 							store: store,
 						});
+						includeMap[type].push(includedResource);
+					}
+				});
+
+				Object.keys(includeMap).forEach((storeName) => {
+					const store = this.relatedStores[storeName];
+					const includedResources = includeMap[storeName];
+
+					if (store !== undefined && includedResources.length) {
 						runInAction(() => {
-							store.storeRecords([foreignResource]);
+							store.storeRecords(includedResources);
 						});
 					}
 				});
